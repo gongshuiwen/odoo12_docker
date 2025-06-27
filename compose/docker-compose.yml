@@ -1,0 +1,107 @@
+version: '3.9'
+services:
+  nginx:
+    image: nginx
+    restart: always
+    depends_on:
+      - web
+      - chat
+    ports:
+      - "80:80"
+    volumes:
+      - ${BASE_DIR-.}/nginx.conf:/etc/nginx/nginx.conf:ro
+  web:
+    image: ${IMAGE_NAME:-odoo12}:${IMAGE_TAG:-latest}
+    restart: always
+    depends_on:
+      - db
+      - rabbitmq
+      - redis
+      - minio
+#    ports:
+#      - "8069:8069"
+    volumes:
+      - ${BASE_DIR-.}/data_odoo:/var/lib/odoo
+      - ${BASE_DIR-.}/odoo.conf:/etc/odoo/odoo.conf
+    command: ['--max-cron-threads=0', '--longpolling-port=-1']
+  chat:
+    image: ${IMAGE_NAME:-odoo12}:${IMAGE_TAG:-latest}
+    restart: always
+    depends_on:
+      - db
+      - rabbitmq
+      - redis
+      - minio
+#    ports:
+#      - "8072:8072"
+    volumes:
+      - ${BASE_DIR-.}/data_odoo:/var/lib/odoo
+      - ${BASE_DIR-.}/odoo.conf:/etc/odoo/odoo.conf
+    command: ['--', 'gevent']
+  cron:
+    image: ${IMAGE_NAME:-odoo12}:${IMAGE_TAG:-latest}
+    restart: always
+    depends_on:
+      - db
+      - rabbitmq
+      - redis
+      - minio
+    volumes:
+      - ${BASE_DIR-.}/data_odoo:/var/lib/odoo
+      - ${BASE_DIR-.}/odoo.conf:/etc/odoo/odoo.conf
+    command: ['--no-http']
+  celery:
+    image: ${IMAGE_NAME:-odoo12}:${IMAGE_TAG:-latest}
+    restart: always
+    depends_on:
+      - db
+      - rabbitmq
+      - redis
+      - minio
+    volumes:
+      - ${BASE_DIR-.}/data_odoo:/var/lib/odoo
+      - ${BASE_DIR-.}/odoo.conf:/etc/odoo/odoo.conf
+    command: ['celery', '--loglevel=INFO']
+  db:
+    image: postgres:13
+    restart: always
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-postgres}
+      - POSTGRES_USER=${POSTGRES_USER:-odoo}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-odoo}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+#    ports:
+#      - "5432:5432"
+    volumes:
+      - ${BASE_DIR-.}/data_db:/var/lib/postgresql/data
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: always
+    hostname: rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-guest}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:-guest}
+#    ports:
+#      - "15671:15671"
+    volumes:
+      - ${BASE_DIR-.}/data_mq:/var/lib/rabbitmq
+  redis:
+    image: redis:7
+    restart: always
+#    ports:
+#      - "6379:6379"
+    volumes:
+      - ${BASE_DIR-.}/data_redis:/data
+    command: ['--requirepass', '${REDIS_PASSWORD:-redis}']
+  minio:
+    image: minio/minio
+    restart: always
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minioadmin}
+#    ports:
+#      - "9000:9000"
+#      - "9001:9001"
+    volumes:
+      - ${BASE_DIR-.}/data_minio:/data
+    command: ['server', '/data', '--console-address', ':9001']
