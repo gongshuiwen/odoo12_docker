@@ -57,9 +57,14 @@ RUN cd /usr/local/lib/python3.7/site-packages/werkzeug && \
     sed -i "293s/self.address_string(),/message % args))/" serving.py && \
     sed -i '294,295d' serving.py
 
+# Create user and gourp, create /mnt/extra-addons, set permissions
+RUN adduser --system --home "/var/lib/odoo" --quiet --group "odoo" && \
+    mkdir -p /mnt/extra-addons && \
+    chown -R odoo:odoo /var/lib/odoo /mnt/extra-addons
+
 # Copy Odoo 12.0 source files to python site-packages
-COPY $SOURCE_DIR/odoo /usr/local/lib/python3.7/site-packages/odoo/
-COPY $SOURCE_DIR/addons /usr/local/lib/python3.7/site-packages/odoo/addons/
+COPY --chown=odoo $SOURCE_DIR/odoo /usr/local/lib/python3.7/site-packages/odoo/
+COPY --chown=odoo $SOURCE_DIR/addons /usr/local/lib/python3.7/site-packages/odoo/addons/
 
 # Patch RequestHandler to support HTTP/1.1
 RUN sed -i "128i\        self.protocol_version = 'HTTP/1.1'" \
@@ -68,11 +73,6 @@ RUN sed -i "128i\        self.protocol_version = 'HTTP/1.1'" \
 # Patch PreforkServer#process_spawn to support no long_polling worker
 RUN sed -i "755c\            if not self.long_polling_pid and config['longpolling_port'] >= 0:" \
     /usr/local/lib/python3.7/site-packages/odoo/service/server.py
-
-# Create user and gourp, create /mnt/extra-addons, set permissions
-RUN adduser --system --home "/var/lib/odoo" --quiet --group "odoo" && \
-    mkdir -p /mnt/extra-addons && \
-    chown -R odoo:odoo /var/lib/odoo /mnt/extra-addons
 
 # Copy odoo configuration file, entrypoint script and start scripts
 COPY --chown=odoo $DOCKER_DIR/odoo.conf /etc/odoo/odoo.conf
