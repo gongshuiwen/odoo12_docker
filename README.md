@@ -5,7 +5,7 @@
 该仓库为基于 odoo 12.0 的自定义镜像构建文件，相较于官方镜像做出了如下的一些修改：
 
 - 基础镜像使用 python:3.7-slim-bullseye
-- 将 debian 软件源切换为阿里镜像源
+- 支持切换 debian, postgresql, pypi 源
 - 改为从本地文件安装 wkhtmltox
 - 添加 Windows 系统中的宋体和 TimesNewRoman 字体
 - 镜像中默认安装 celery, redis, minio 模块，并支持作为 celery worker 运行
@@ -18,7 +18,7 @@
 
 ```sh
 git clone --depth=1 -b 12.0 https://github.com/odoo/odoo.git
-docker build --build-arg SOURCE_DIR=odoo --build-arg DOCKER_DIR=. -t odoo12:latest .
+docker build -t odoo12:latest .
 ```
 
 ### 运行 celery worker
