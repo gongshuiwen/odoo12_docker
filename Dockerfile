@@ -69,16 +69,15 @@ RUN sed -i "128i\        self.protocol_version = 'HTTP/1.1'" \
 RUN sed -i "755c\            if not self.long_polling_pid and config['longpolling_port'] >= 0:" \
     /usr/local/lib/python3.7/site-packages/odoo/service/server.py
 
-# Copy odoo configuration file, entrypoint script and start scripts
-COPY $DOCKER_DIR/odoo.conf /etc/odoo/odoo.conf
-COPY $DOCKER_DIR/docker-entrypoint.sh /
-COPY $DOCKER_DIR/*.py /usr/local/bin/
-
 # Create user and gourp, create /mnt/extra-addons, set permissions
 RUN adduser --system --home "/var/lib/odoo" --quiet --group "odoo" && \
     mkdir -p /mnt/extra-addons && \
-    chown odoo /var/lib/odoo /etc/odoo/odoo.conf /mnt/extra-addons /docker-entrypoint.sh /usr/local/bin/*.py && \
-    chmod u+x /docker-entrypoint.sh /usr/local/bin/*.py
+    chown -R odoo:odoo /var/lib/odoo /mnt/extra-addons
+
+# Copy odoo configuration file, entrypoint script and start scripts
+COPY --chown=odoo $DOCKER_DIR/odoo.conf /etc/odoo/odoo.conf
+COPY --chown=odoo $DOCKER_DIR/docker-entrypoint.sh /
+COPY --chown=odoo $DOCKER_DIR/*.py /usr/local/bin/
 
 # Mount /var/lib/odoo to allow restoring filestore
 VOLUME ["/var/lib/odoo"]
