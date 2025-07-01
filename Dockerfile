@@ -76,8 +76,8 @@ RUN sed -i "755c\            if not self.long_polling_pid and config['longpollin
 
 # Copy odoo configuration file, entrypoint script and start scripts
 COPY --chown=odoo $DOCKER_DIR/odoo.conf /etc/odoo/odoo.conf
-COPY --chown=odoo $DOCKER_DIR/docker-entrypoint.sh /
-COPY --chown=odoo $DOCKER_DIR/*.py /usr/local/bin/
+COPY --chown=odoo --chmod=755 $DOCKER_DIR/docker-entrypoint.sh /
+COPY --chown=odoo --chmod=755 $DOCKER_DIR/*.py /usr/local/bin/
 
 # Mount /var/lib/odoo to allow restoring filestore
 VOLUME ["/var/lib/odoo"]
