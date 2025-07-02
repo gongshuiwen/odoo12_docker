@@ -1,4 +1,4 @@
-version: '3.9'
+name: odoo12
 services:
   nginx:
     image: nginx
@@ -21,7 +21,7 @@ services:
 #    ports:
 #      - "8069:8069"
     volumes:
-      - ${BASE_DIR-.}/data_odoo:/var/lib/odoo
+      - data_odoo:/var/lib/odoo
       - ${BASE_DIR-.}/odoo.conf:/etc/odoo/odoo.conf
     command: ['--max-cron-threads=0', '--longpolling-port=-1']
   chat:
@@ -35,7 +35,7 @@ services:
 #    ports:
 #      - "8072:8072"
     volumes:
-      - ${BASE_DIR-.}/data_odoo:/var/lib/odoo
+      - data_odoo:/var/lib/odoo
       - ${BASE_DIR-.}/odoo.conf:/etc/odoo/odoo.conf
     command: ['--', 'gevent']
   cron:
@@ -47,7 +47,7 @@ services:
       - redis
       - minio
     volumes:
-      - ${BASE_DIR-.}/data_odoo:/var/lib/odoo
+      - data_odoo:/var/lib/odoo
       - ${BASE_DIR-.}/odoo.conf:/etc/odoo/odoo.conf
     command: ['--no-http']
   celery:
@@ -59,7 +59,7 @@ services:
       - redis
       - minio
     volumes:
-      - ${BASE_DIR-.}/data_odoo:/var/lib/odoo
+      - data_odoo:/var/lib/odoo
       - ${BASE_DIR-.}/odoo.conf:/etc/odoo/odoo.conf
     command: ['celery', '--loglevel=INFO']
   db:
@@ -73,7 +73,7 @@ services:
 #    ports:
 #      - "5432:5432"
     volumes:
-      - ${BASE_DIR-.}/data_db:/var/lib/postgresql/data
+      - data_db:/var/lib/postgresql/data
   rabbitmq:
     image: rabbitmq:3-management
     restart: always
@@ -84,14 +84,14 @@ services:
 #    ports:
 #      - "15671:15671"
     volumes:
-      - ${BASE_DIR-.}/data_mq:/var/lib/rabbitmq
+      - data_mq:/var/lib/rabbitmq
   redis:
     image: redis:7
     restart: always
 #    ports:
 #      - "6379:6379"
     volumes:
-      - ${BASE_DIR-.}/data_redis:/data
+      - data_redis:/data
     command: ['--requirepass', '${REDIS_PASSWORD:-redis}']
   minio:
     image: minio/minio
@@ -103,5 +103,11 @@ services:
 #      - "9000:9000"
 #      - "9001:9001"
     volumes:
-      - ${BASE_DIR-.}/data_minio:/data
+      - data_minio:/data
     command: ['server', '/data', '--console-address', ':9001']
+volumes:
+  data_odoo:
+  data_db:
+  data_mq:
+  data_redis:
+  data_minio:
