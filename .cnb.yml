@@ -6,6 +6,6 @@ main:
         - name: clone odoo12
           script: git clone --depth=1 -b 12.0 https://github.com/odoo/odoo.git
         - name: docker build
-          script: docker build -t ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/odoo12:latest .
+          script: docker build DEB_SOURCE=https://mirrors.tencentyun.com --build-arg PG_SOURCE=https://mirrors.tencentyun.com --build-arg PYPI_SOURCE=https://mirrors.tencentyun.com/pypi/simple -t ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/odoo12:latest .
         - name: docker push
           script: docker push ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/odoo12:latest
