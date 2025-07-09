@@ -1,4 +1,4 @@
-FROM python:3.8-slim-bullseye
+FROM python:3.9-slim-bullseye
 
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
@@ -47,12 +47,13 @@ ARG PYPI_SOURCE=https://mirrors.tencent.com/pypi/simple
 RUN pip install uv --no-cache-dir -i ${PYPI_SOURCE}
 COPY $DOCKER_DIR/requirements.txt /requirements.txt
 RUN apt-get update && apt-get install -y --no-install-recommends build-essential && \
+    pip install setuptools==57.5.0 --no-cache-dir -i ${PYPI_SOURCE} && \
     pip install suds-jurko==0.6 --no-cache-dir -i ${PYPI_SOURCE} && \
     uv pip install --system --no-cache-dir -r /requirements.txt -i ${PYPI_SOURCE} && \
     apt-get remove -y build-essential && apt-get -y autoremove
 
 # Patch werkzeug logging format
-RUN cd /usr/local/lib/python3.8/site-packages/werkzeug && \
+RUN cd /usr/local/lib/python3.9/site-packages/werkzeug && \
     sed -i "293s/%s - - \[%s\] %s/%s/" serving.py && \
     sed -i "293s/self.address_string(),/message % args))/" serving.py && \
     sed -i '294,295d' serving.py
@@ -66,16 +67,16 @@ RUN adduser --system --home "/var/lib/odoo" --quiet --group "odoo" && \
 ARG ODOO_SOURCE_DIR=odoo
 
 # Copy Odoo 12.0 source files to python site-packages
-COPY --chown=odoo $ODOO_SOURCE_DIR/odoo /usr/local/lib/python3.8/site-packages/odoo/
-COPY --chown=odoo $ODOO_SOURCE_DIR/addons /usr/local/lib/python3.8/site-packages/odoo/addons/
+COPY --chown=odoo $ODOO_SOURCE_DIR/odoo /usr/local/lib/python3.9/site-packages/odoo/
+COPY --chown=odoo $ODOO_SOURCE_DIR/addons /usr/local/lib/python3.9/site-packages/odoo/addons/
 
 # Patch RequestHandler to support HTTP/1.1
 RUN sed -i "128i\        self.protocol_version = 'HTTP/1.1'" \
-    /usr/local/lib/python3.8/site-packages/odoo/service/server.py
+    /usr/local/lib/python3.9/site-packages/odoo/service/server.py
 
 # Patch PreforkServer#process_spawn to support no long_polling worker
 RUN sed -i "755c\            if not self.long_polling_pid and config['longpolling_port'] >= 0:" \
-    /usr/local/lib/python3.8/site-packages/odoo/service/server.py
+    /usr/local/lib/python3.9/site-packages/odoo/service/server.py
 
 # Copy odoo configuration file, entrypoint script and start scripts
 COPY --chown=odoo $DOCKER_DIR/odoo.conf /etc/odoo/odoo.conf
